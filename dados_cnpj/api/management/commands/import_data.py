@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 from bs4 import BeautifulSoup
-import requests
+import wget
 import zipfile
-import urllib
+import urllib3
 import os
 
 class Command(BaseCommand):
@@ -10,24 +10,30 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         url = 'https://dadosabertos.rfb.gov.br/CNPJ/'
-        output_folder = 'api/dados_csv/'
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        destino = os.path.join(os.getcwd(), 'api', 'arquivos_csv')
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            links = soup.find_all('a')
-            for link in links:
-                href = link.get('href')
-                if href.endswith('.zip'):
-                    full_url = urllib.parse.urljoin(url, href)
-                    file_name = os.path.join(output_folder, href)
-                    response = requests.get(full_url)
-                    with open(file_name, 'wb') as f:
-                        f.write(response.content)
+        if not os.path.exists(destino):
+            os.makedirs(destino)
 
-                    with zipfile.ZipFile(file_name, 'r') as zip_ref:
-                        zip_ref.extractall(output_folder)
+        conexao = urllib3.PoolManager()
+        retorno = conexao.request('GET', url)
+        pagina = BeautifulSoup(retorno.data, 'html.parser')
+        links = []
 
-                    os.remove(file_name)
+        for link in pagina.find_all('a'):
+            href = link.get('href')
+            if href.endswith('.zip'):
+                links.append(url + href)
+
+        for link in links:
+            wget.download(link, destino)
+        
+        for link in links:
+            arquivo_zip = os.path.join(destino, link[37:])
+            arquivo_csv = os.path.join(destino, link[37:].split('.')[0] + '.csv')
+            with zipfile.ZipFile(arquivo_zip, 'r') as zip:
+                zip.extract(arquivo_csv)
+                os.remove(arquivo_zip)
+
+
+        
