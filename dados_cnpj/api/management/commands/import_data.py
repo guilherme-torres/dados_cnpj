@@ -23,7 +23,7 @@ class Command(BaseCommand):
             href = link.get('href')
             if href.endswith('.zip'):
                 links.append(url + href)
-
+        
         for link in links:
             resposta = requests.get(link, stream=True)
             arquivo_zip = os.path.join(destino, link[37:])
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                         'unit_divisor': 1024,
                     }
                     with tqdm.tqdm(**tqdm_params) as pb:
-                        for chunk in resposta.iter_content(chunk_size=1024):
+                        for chunk in resposta.iter_content(chunk_size=1024*10):
                             pb.update(len(chunk))
                             arquivo.write(chunk)
             else:
@@ -47,8 +47,7 @@ class Command(BaseCommand):
 
         for link in links:
             arquivo_zip = os.path.join(destino, link[37:])
-            arquivo_csv = os.path.join(destino, link[37:].split('.')[0] + '.csv')
+            # arquivo_csv = os.path.join(destino, link[37:].split('.')[0] + '.csv')
             with zipfile.ZipFile(arquivo_zip, 'r') as zip:
-                zip.extract(arquivo_csv)
-                os.remove(arquivo_zip)
-  
+                zip.extract(destino)
+            os.remove(arquivo_zip)
