@@ -23,7 +23,7 @@ class Command(BaseCommand):
             href = link.get('href')
             if href.endswith('.zip'):
                 links.append(url + href)
-        
+
         for link in links:
             resposta = requests.get(link, stream=True)
             arquivo_zip = os.path.join(destino, link[37:])
@@ -49,7 +49,9 @@ class Command(BaseCommand):
             nome_arquivo = link[37:]
             arquivo_zip = os.path.join(destino, nome_arquivo)
             with zipfile.ZipFile(arquivo_zip, 'r') as zip:
-                zip.extractall(os.path.join(destino, 'csv'))
-                nome_original = os.path.join(os.path.join(destino, 'csv'), zip.namelist()[0])
                 novo_nome = os.path.join(os.path.join(destino, 'csv'), nome_arquivo.split('.')[0] + '.csv')
+                if os.path.exists(novo_nome):
+                    os.remove(novo_nome)
+                nome_original = os.path.join(os.path.join(destino, 'csv'), zip.namelist()[0])
+                zip.extractall(os.path.join(destino, 'csv'))
                 os.rename(nome_original, novo_nome)
