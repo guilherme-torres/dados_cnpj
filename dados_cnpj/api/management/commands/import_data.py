@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         url = 'https://dadosabertos.rfb.gov.br/CNPJ/'
-        destino = os.path.join(os.getcwd(), 'api', 'arquivos_csv')
+        destino = os.path.join(os.getcwd(), 'api', 'dados')
 
         if not os.path.exists(destino):
             os.makedirs(destino)
@@ -46,8 +46,10 @@ class Command(BaseCommand):
                 resposta.raise_for_status()
 
         for link in links:
-            arquivo_zip = os.path.join(destino, link[37:])
-            # arquivo_csv = os.path.join(destino, link[37:].split('.')[0] + '.csv')
+            nome_arquivo = link[37:]
+            arquivo_zip = os.path.join(destino, nome_arquivo)
             with zipfile.ZipFile(arquivo_zip, 'r') as zip:
-                zip.extract(destino)
-            os.remove(arquivo_zip)
+                zip.extractall(os.path.join(destino, 'csv'))
+                nome_original = os.path.join(os.path.join(destino, 'csv'), zip.namelist()[0])
+                novo_nome = os.path.join(os.path.join(destino, 'csv'), nome_arquivo.split('.')[0] + '.csv')
+                os.rename(nome_original, novo_nome)
